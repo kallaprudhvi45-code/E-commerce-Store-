@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeAlpha Shop | Home</title>
+    <meta name="description" content="Welcome to CodeAlpha Simple Ecommerce Store - Your one stop shop for premium products.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">CodeAlpha Shop</a>
+            <button class="mobile-menu-btn">☰</button>
+            <div class="nav-links" id="auth-links">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="container mb-8">
+            <div style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; padding: 4rem 2rem; border-radius: var(--radius-lg); text-align: center;">
+                <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Discover Premium Products</h1>
+                <p style="font-size: 1.125rem; margin-bottom: 2rem; opacity: 0.9;">Shop the latest trends with amazing discounts and fast shipping.</p>
+                <a href="#products-section" class="btn" style="background: white; color: var(--primary-color); font-size: 1.125rem;">Shop Now</a>
+            </div>
+        </section>
+
+        <section id="products-section" class="container">
+            <h2 class="mb-4">Featured Products</h2>
+            <div class="mb-4 flex" style="gap: 1rem;">
+                <input type="text" id="search-input" class="form-control" placeholder="Search products..." style="max-width: 300px;">
+                <select id="category-select" class="form-control" style="max-width: 200px;">
+                    <option value="">All Categories</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Clothing">Clothing</option>
+                    <option value="Books">Books</option>
+                </select>
+                <button id="filter-btn" class="btn btn-primary">Filter</button>
+            </div>
+            
+            <div id="products-grid" class="grid grid-cols-4">
+                <!-- Products will be loaded here -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 CodeAlpha Simple Ecommerce Store. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        async function loadProducts(category = '', search = '') {
+            UI.showLoading('products-grid');
+            try {
+                let url = '/products/';
+                const params = new URLSearchParams();
+                if (category) params.append('category', category);
+                if (search) params.append('search', search);
+                if (params.toString()) url += '?' + params.toString();
+
+                const products = await ApiService.get(url);
+                const grid = document.getElementById('products-grid');
+                
+                if (products.length === 0) {
+                    grid.innerHTML = '<div class="text-center" style="grid-column: 1 / -1;">No products found.</div>';
+                    return;
+                }
+
+                grid.innerHTML = products.map(product => `
+                    <div class="card">
+                        <img src="${product.image ? product.image : 'https://via.placeholder.com/300x200?text=No+Image'}" alt="${product.name}" class="product-img">
+                        <div class="product-content">
+                            <div class="badge badge-processing mb-2">${product.category}</div>
+                            <h3 class="product-title" title="${product.name}">${product.name}</h3>
+                            <div class="product-price">$${product.price}</div>
+                            <button class="btn btn-primary" style="width: 100%" onclick="addToCart(${product.id})">Add to Cart</button>
+                            <a href="product.html?id=${product.id}" class="btn btn-outline mt-4" style="width: 100%; text-align: center;">View Details</a>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('products-grid').innerHTML = '<div class="text-center" style="grid-column: 1 / -1; color: var(--danger);">Failed to load products.</div>';
+                UI.showError('Failed to load products');
+            }
+        }
+
+        async function addToCart(productId) {
+            if (!ApiService.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                await ApiService.post('/cart/add/', { product: productId, quantity: 1 });
+                UI.showToast('Product added to cart!');
+            } catch (error) {
+                UI.showError(error.message || 'Failed to add to cart');
+            }
+        }
+
+        function applyFilters() {
+            const search = document.getElementById('search-input').value;
+            const category = document.getElementById('category-select').value;
+            loadProducts(category, search);
+        }
+
+        document.getElementById('filter-btn').addEventListener('click', applyFilters);
+        
+        document.getElementById('category-select').addEventListener('change', applyFilters);
+        
+        document.getElementById('search-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => loadProducts());
+    </script>
+</body>
+</html>

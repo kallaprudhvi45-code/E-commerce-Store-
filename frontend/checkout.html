@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeAlpha Shop | Checkout Success</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">CodeAlpha Shop</a>
+            <button class="mobile-menu-btn">☰</button>
+            <div class="nav-links" id="auth-links"></div>
+        </div>
+    </nav>
+
+    <main class="container" style="display: flex; justify-content: center; align-items: center; padding: 4rem 1.5rem;">
+        <div class="card text-center" style="width: 100%; max-width: 500px; padding: 3rem;">
+            <div style="font-size: 4rem; color: var(--secondary-color); margin-bottom: 1rem;">✓</div>
+            <h2 class="mb-4">Order Successful!</h2>
+            <p class="text-muted mb-8">Thank you for your purchase. Your order has been placed successfully and is currently being processed.</p>
+            
+            <div style="background-color: var(--bg-color); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 2rem;">
+                <p><strong>Order ID:</strong> <span id="order-id-display">Loading...</span></p>
+            </div>
+            
+            <div class="flex" style="gap: 1rem; justify-content: center;">
+                <a href="orders.html" class="btn btn-primary">View Orders</a>
+                <a href="index.html" class="btn btn-outline">Continue Shopping</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        if (!ApiService.isAuthenticated()) {
+            window.location.href = 'login.html';
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('order_id');
+        
+        if (orderId) {
+            document.getElementById('order-id-display').innerText = orderId;
+        } else {
+            document.getElementById('order-id-display').innerText = 'Unknown (check your orders page)';
+        }
+    </script>
+</body>
+</html>

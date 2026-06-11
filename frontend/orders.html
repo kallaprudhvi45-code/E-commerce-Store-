@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeAlpha Shop | Order History</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">CodeAlpha Shop</a>
+            <button class="mobile-menu-btn">☰</button>
+            <div class="nav-links" id="auth-links"></div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h2 class="mb-8">Order History</h2>
+        <div id="orders-list" class="grid grid-cols-1">
+            <!-- Orders will load here -->
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        if (!ApiService.isAuthenticated()) {
+            window.location.href = 'login.html';
+        }
+
+        async function loadOrders() {
+            UI.showLoading('orders-list');
+            try {
+                const orders = await ApiService.get('/orders/');
+                const container = document.getElementById('orders-list');
+                
+                if (orders.length === 0) {
+                    container.innerHTML = `
+                        <div class="card text-center" style="padding: 3rem;">
+                            <h3>No orders found</h3>
+                            <p class="text-muted mt-4">You haven't placed any orders yet.</p>
+                            <a href="index.html" class="btn btn-primary mt-4">Start Shopping</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = orders.map(order => `
+                    <div class="card mb-4" style="padding: 1.5rem;">
+                        <div class="flex justify-between items-center mb-4 pb-4" style="border-bottom: 1px solid var(--border-color);">
+                            <div>
+                                <h4 class="mb-1">Order #${order.order_id.split('-')[0]}</h4>
+                                <div class="text-muted text-sm">${new Date(order.created_at).toLocaleString()}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="badge badge-${order.status.toLowerCase()} mb-1">${order.status}</div>
+                                <div style="font-weight: 700;">$${parseFloat(order.total_price).toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2" style="gap: 1rem;">
+                            ${order.products.map(p => `
+                                <div class="flex items-center" style="gap: 1rem;">
+                                    <img src="${p.product.image ? p.product.image : 'https://via.placeholder.com/50'}" style="width: 50px; height: 50px; object-fit: cover; border-radius: var(--radius-md);">
+                                    <div>
+                                        <div style="font-weight: 500;">${p.product.name}</div>
+                                        <div class="text-muted">Qty: ${p.quantity} | $${parseFloat(p.subtotal).toFixed(2)}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                UI.showError('Failed to load orders');
+                document.getElementById('orders-list').innerHTML = '<div class="text-center">Failed to load orders.</div>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadOrders);
+    </script>
+</body>
+</html>

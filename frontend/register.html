@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeAlpha Shop | Register</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">CodeAlpha Shop</a>
+            <button class="mobile-menu-btn">☰</button>
+            <div class="nav-links" id="auth-links"></div>
+        </div>
+    </nav>
+
+    <main class="container" style="display: flex; justify-content: center; align-items: center; padding: 4rem 1.5rem;">
+        <div class="card" style="width: 100%; max-width: 500px; padding: 2.5rem;">
+            <h2 class="text-center mb-8">Create an Account</h2>
+            <form id="register-form">
+                <div class="grid grid-cols-2" style="gap: 1rem;">
+                    <div class="form-group mb-1">
+                        <label class="form-label">Username *</label>
+                        <input type="text" id="username" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-1">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="email" class="form-control">
+                    </div>
+                </div>
+                
+                <div class="form-group mb-1">
+                    <label class="form-label">Password *</label>
+                    <input type="password" id="password" class="form-control" required>
+                </div>
+
+                <div class="form-group mb-1">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" id="phone" class="form-control">
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="form-label">Address</label>
+                    <textarea id="address" class="form-control" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 0.75rem;">Sign Up</button>
+            </form>
+            <p class="text-center mt-4">
+                Already have an account? <a href="login.html">Login</a>
+            </p>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        if (ApiService.isAuthenticated()) {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = e.target.querySelector('button');
+            btn.innerText = 'Creating account...';
+            btn.disabled = true;
+
+            const userData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value
+            };
+
+            try {
+                await ApiService.register(userData);
+                UI.showToast('Registration successful! Please login.');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            } catch (error) {
+                UI.showError(error.message || 'Registration failed');
+                btn.innerText = 'Sign Up';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

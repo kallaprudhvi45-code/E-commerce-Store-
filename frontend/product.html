@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeAlpha Shop | Product Details</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">CodeAlpha Shop</a>
+            <button class="mobile-menu-btn">☰</button>
+            <div class="nav-links" id="auth-links"></div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div id="product-detail" class="grid grid-cols-2" style="gap: 4rem; align-items: start;">
+            <!-- Content loaded via JS -->
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        if (!productId) window.location.href = 'index.html';
+
+        async function loadProduct() {
+            UI.showLoading('product-detail');
+            try {
+                const product = await ApiService.get(`/products/${productId}/`);
+                const container = document.getElementById('product-detail');
+                
+                const imageUrl = product.image ? product.image : 'https://via.placeholder.com/600x600?text=No+Image';
+
+                container.innerHTML = `
+                    <div>
+                        <img src="${imageUrl}" alt="${product.name}" style="width: 100%; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+                    </div>
+                    <div>
+                        <div class="badge badge-processing mb-4">${product.category}</div>
+                        <h1 class="mb-4">${product.name}</h1>
+                        <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);" class="mb-4">
+                            $${product.price}
+                        </div>
+                        <p class="text-muted mb-8" style="font-size: 1.125rem; white-space: pre-line;">${product.description}</p>
+                        
+                        <div class="flex items-center mb-8" style="gap: 1rem;">
+                            <label style="font-weight: 500;">Quantity:</label>
+                            <input type="number" id="qty" class="form-control" value="1" min="1" max="${product.stock}" style="width: 100px;">
+                            <span class="text-muted text-sm">${product.stock} available</span>
+                        </div>
+
+                        <button id="add-btn" class="btn btn-primary" style="width: 100%; font-size: 1.25rem; padding: 1rem;">Add to Cart</button>
+                    </div>
+                `;
+
+                document.getElementById('add-btn').addEventListener('click', async () => {
+                    if (!ApiService.isAuthenticated()) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    const qty = parseInt(document.getElementById('qty').value);
+                    try {
+                        const btn = document.getElementById('add-btn');
+                        btn.innerText = 'Adding...';
+                        btn.disabled = true;
+                        
+                        await ApiService.post('/cart/add/', { product: productId, quantity: qty });
+                        UI.showToast('Added to cart successfully!');
+                        
+                        btn.innerText = 'Add to Cart';
+                        btn.disabled = false;
+                    } catch (error) {
+                        UI.showError('Failed to add to cart');
+                        document.getElementById('add-btn').innerText = 'Add to Cart';
+                        document.getElementById('add-btn').disabled = false;
+                    }
+                });
+
+            } catch (error) {
+                UI.showError('Product not found');
+                document.getElementById('product-detail').innerHTML = '<h2>Product not found.</h2>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadProduct);
+    </script>
+</body>
+</html>
